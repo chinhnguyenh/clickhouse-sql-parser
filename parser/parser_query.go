@@ -824,6 +824,15 @@ func (p *Parser) parseWindowCondition(pos Pos) (*WindowExpr, error) {
 	if err := p.expectTokenKind(TokenKindLParen); err != nil {
 		return nil, err
 	}
+	var windowName *Ident
+	if p.matchTokenKind(TokenKindIdent) &&
+		!p.matchOneOfKeywords(KeywordPartition, KeywordOrder, KeywordRows, KeywordRange) {
+		var err error
+		windowName, err = p.parseIdent()
+		if err != nil {
+			return nil, err
+		}
+	}
 	partitionBy, err := p.tryParsePartitionByClause(pos)
 	if err != nil {
 		return nil, err
@@ -843,6 +852,7 @@ func (p *Parser) parseWindowCondition(pos Pos) (*WindowExpr, error) {
 	return &WindowExpr{
 		LeftParenPos:  pos,
 		RightParenPos: rightParenPos,
+		WindowName:    windowName,
 		PartitionBy:   partitionBy,
 		OrderBy:       orderBy,
 		Frame:         frame,
